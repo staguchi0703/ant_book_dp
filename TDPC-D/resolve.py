@@ -12,7 +12,7 @@ def resolve():
             while num % divisor == 0:
                 num //= divisor
                 d_factor[divisor] += 1
-        if divisor >= 5 and d_factor == [0,0,0,0,0,0]:
+        if num > 1:
             return False
         else:
             return d_factor

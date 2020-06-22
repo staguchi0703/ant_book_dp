@@ -25,7 +25,7 @@ class TestClass(unittest.TestCase):
         self.assertIO(input, output)
 
     def test_Sample_Input_2(self):
-        input = """3 1"""
+        input = """3 17"""
         output = """0.875000000"""
         self.assertIO(input, output)
 

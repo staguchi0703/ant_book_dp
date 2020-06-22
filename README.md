@@ -32,3 +32,72 @@ for i in range(N):
 print(sum(dp[N]))
 
 ```
+
+## [TDPC-D](https://atcoder.jp/contests/tdpc/tasks/tdpc_dice)
+
+
+### 方針
+
+* サイコロの目の積がDの倍数かどうかなので、Dを素因数分解して2,3,5以外が含まれていてはいけない
+  * どっちがどっちに含まれてって関係をちゃんと考えて場合分けしないと痛い目をみる
+  * 最初に解くときによく考えずにやってたから、Dに2,3,5以外の素因数が含まれるケースに気が付かずに1時間費やしてしまった。
+* Dを因数分解
+* サイコロの目の素因数を添え字にして、2,3,5の3次元要素と処理個数のdp(次元数4)を持つ
+  * 処理個数の次元を持つことで、添え時がDの数を超えたときに添え時が該当しないときにも足し合わせることができる
+
+### 実装
+
+* Dの素因数分解のとき5以上は使わないので、5以下の小さなリストをもつ
+* 因数分解を関数にしておいて、5以上の素数が含まれている場合にFalseを返すことで、以降の条件分岐を分かりやすくした。
+* dpで確率をもった。
+  * 0個の時を1とした
+  * 1個選ぶとそれぞれ1/6
+  * 出た目の分素因数の添え時に素因数の個数を加えた
+    * 例えば4がでたら、素因数は2、加える数は2
+* dpの素因数要素がDの素因数の数を超えないようにスライスに`min(index, Dの素因数の数)`をいれた。
+  * これにより、要素が閾値を超えたらその値は1/6されなくなる。
+  * ほしい確率は、投げた回数とDの素因数の数（各添え字が対応）
+
+```python: TDPC-D.py
+N, D = [int(item) for item in input().split()]
+
+def get_factor(num):
+    d_factor = [0,0,0,0,0,0]
+    divisor = 1
+    while num >= 1 and divisor <= 5:
+        divisor += 1
+        while num % divisor == 0:
+            num //= divisor
+            d_factor[divisor] += 1
+    if num > 1:
+        return False
+    else:
+        return d_factor
+
+
+d_fact = get_factor(D)
+
+if d_fact and D != 1:
+    dp = [[[[0.
+        for _ in range(d_fact[2]+1)]
+        for _ in range(d_fact[3]+1)]
+        for _ in range(d_fact[5]+1)]
+        for _ in range(N+1)]
+    
+    dp[0][0][0][0] = 1.
+
+    for i in range(N):
+        for j5 in range(d_fact[5]+1):
+            for j3 in range(d_fact[3]+1):
+                for j2 in range(d_fact[2]+1):
+                    dp[i+1][j5][j3][j2] += dp[i][j5][j3][j2] * 1/6
+                    dp[i+1][j5][j3][min(j2+1, d_fact[2])] += dp[i][j5][j3][j2] * 1/6
+                    dp[i+1][j5][min(j3+1, d_fact[3])][j2] += dp[i][j5][j3][j2] * 1/6
+                    dp[i+1][j5][j3][min(j2+2, d_fact[2])] += dp[i][j5][j3][j2] * 1/6
+                    dp[i+1][min(j5+1, d_fact[5])][j3][j2] += dp[i][j5][j3][j2] * 1/6
+                    dp[i+1][j5][min(j3+1, d_fact[3])][min(j2+1, d_fact[2])] += dp[i][j5][j3][j2] * 1/6
+    print(dp[N][d_fact[5]][d_fact[3]][d_fact[2]])
+else:
+    print(0.)
+
+```

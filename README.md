@@ -101,3 +101,57 @@ else:
     print(0.)
 
 ```
+
+## [ABC015D　高橋君の苦悩])(https://atcoder.jp/contests/abc015/tasks/abc015_4)
+
+### 方針
+
+* 幅Wまでかつ個数制限Kまでなので、N枚と幅Wと制限Kを考慮した添え時3のdpが必要と考える
+*  $50 \times 50 \times 10^4 = 2.5 \times 10^7$なので愚直に計算すると間に合わなさそう(pythonだもの)
+* dp配列を再利用するためN枚の次元をなくして、比較して大きいほうを上書きすることにする
+* for文を三回回すと重いので、ナップザック計算している項目をnumpyの行列計算に置き換える
+* dp計算の重複を防ぐため逆順で計算する
+
+
+### 実装
+
+* numpyの並列処理を使う
+  * 下記サイトの解説を参照されたい
+    * [公式](https://numpy.org/doc/stable/reference/generated/numpy.maximum.html)
+    * [Educational DP Contest(B,D,E,F,I,L)で学ぶnumpy高速化](https://qiita.com/yH3PO4/items/332c1ee51c5131032b8e)
+  * 3重forループの一番奥はこう書かれるはずだった
+
+    ```python
+    for l in range(w, W+1)[::-1]:
+        dp[j][l] = max(dp[j][l], dp[j-1][l-w] + p)
+    ```
+
+  * `for l in range(w, W+1)[::-1]`以下の処理はlについて独立なので、並列処理しても良い。numpyを使うと以下の様に書ける。
+
+    ```python
+    np.maximum(dp[j, w:], dp[j, -w] + p, out=dp[j, w:])
+    ```
+
+
+* 解答
+
+```python
+def resolve():
+    import numpy as np
+    W = int(input())
+    N, K = [int(item) for item in input().split()]
+
+    ss_list = [[int(item) for item in input().split()] for _ in range(N)]
+
+    dp = np.array([[0] * (W+1) for _ in range(K+1)])
+
+    for w, p in ss_list:
+        for j in range(K)[::-1]:
+            np.maximum(dp[j, w:], dp[j-1, :-w] + p, out=dp[j, w:])
+
+    print(dp[-2, -1])
+
+if __name__ == "__main__":
+    resolve()
+
+```
